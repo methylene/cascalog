@@ -16,6 +16,7 @@ pom.xml
 *.dot
 .lein-failures
 .lein-deps-sum
+.lein-repl-history
 doc
 *.ipr
 *.iws

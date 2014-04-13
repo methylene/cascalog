@@ -116,3 +116,17 @@
                  ((hfs-wholefile tmp) ?name ?data)) =>
                  (produces [[file-name-0 binary-blob-0]
                             [file-name-1 binary-blob-1]]))))))
+
+(deftest delimited-empty-token-test
+  "Uncomment a line below, to get a test failure."
+  (let [lines [["0" "1" "2"] [nil "1" "2"] ["0" nil "2"] [nil  nil "2"]
+               ;; ["0" "1" nil ] [nil  "1" nil ] ["0" nil  nil ] [nil  nil  nil ]
+               ]]
+    (io/with-fs-tmp [_ tmp]
+      (?- (hfs-textline tmp)
+          (mapv #(vector (clojure.string/join \tab %)) lines)) 
+      (fact 
+       (<- [!a !b !c]
+           ((hfs-delimited tmp) !a !b !c)) =>
+           (produces lines)))))
+
