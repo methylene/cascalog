@@ -22,8 +22,10 @@
            [java.io File PrintStream]
            [cascalog WriterOutputStream]))
 
-(def init-logging
-  (System/setOut (PrintStream. (WriterOutputStream. *out*))))
+(defn init-logging []
+  (System/setOut (PrintStream. (WriterOutputStream. *out*)))
+  (println "Logging inited. Try")
+  (println \space '(test-run (<- [?x] ([[1]] ?x)))))
 
 (defmacro test-run
   "Run form, print result to stdout. Example:
