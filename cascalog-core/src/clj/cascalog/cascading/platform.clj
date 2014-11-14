@@ -31,13 +31,7 @@
            [cascalog.cascading.operations IAggregateBy IAggregator
             Inner Outer Existence]
            [cascalog.logic.def ParallelAggregator ParallelBuffer Prepared]
-           [cascalog.cascading.types ClojureFlow]
-           [jcascalog Predicate]))
-
-(extend-protocol p/IRawPredicate
-  Predicate
-  (normalize [p]
-    (p/normalize (into [] (.toRawCascalogPredicate p)))))
+           [cascalog.cascading.types ClojureFlow]))
 
 ;; ## Allowed Predicates
 

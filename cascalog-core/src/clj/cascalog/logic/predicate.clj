@@ -8,7 +8,6 @@
   (:import [clojure.lang IFn]
            [cascalog.logic.def ParallelAggregator
             ParallelBuffer Prepared]
-           [jcascalog Subquery ClojureOp]
            [cascalog CascalogFunction CascalogBuffer CascalogAggregator ParallelAgg]))
 
 (defprotocol IOperation
@@ -17,14 +16,7 @@
 
 (extend-protocol IOperation
   Object
-  (to-operation [x] x)
-
-  ClojureOp
-  (to-operation [x] (.toVar x))
-
-  Subquery
-  (to-operation [op]
-    (.getCompiledSubquery op)))
+  (to-operation [x] x))
 
 (defprotocol IRawPredicate
   (normalize [_]
@@ -98,6 +90,9 @@
 (extend-protocol INode
   Object (node? [_] false))
 
+(defn nodemap-node? [m]
+  (and (map? m) (:nodename m)))
+
 (defmacro defnode [sym fields & more]
   {:pre [(not (contains? fields 'identifier))]}
   (let [ns-part   (namespace-munge *ns*)
@@ -117,7 +112,21 @@
                  ", taking a map of keywords to field values.")
            ([m#] (~(symbol (str classname "/create"))
                   (-> {:identifier (u/uuid)}
-                      (merge m#))))))))
+                      (merge m#)))))
+
+         ;; (defn ~(symbol (str 'nmap-> sym))
+         ;;   ~docstring
+         ;;   [~@fields]
+         ;;   (new ~classname (u/uuid) ~@fields))
+         ;; (defn ~(symbol (str 'map-> sym))
+         ;;   ~(str "Factory function for class "
+         ;;         classname
+         ;;         ", taking a map of keywords to field values.")
+         ;;   ([m#] (~(symbol (str classname "/create"))
+         ;;          (-> {:identifier (u/uuid)}
+         ;;              (merge m#)))))
+
+)))
 
 ;; Leaves of the tree:
 (defnode Generator [gen fields])

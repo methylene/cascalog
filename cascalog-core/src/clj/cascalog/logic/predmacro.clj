@@ -7,8 +7,7 @@
             [cascalog.logic.predicate :as p]
             [cascalog.logic.vars :as v]
             [jackknife.core :as u]
-            [jackknife.seq :as s])
-  (:import [jcascalog PredicateMacro PredicateMacroTemplate]))
+            [jackknife.seq :as s]))
 
 ;; ## Predicate Macro Building Functions
 
@@ -29,27 +28,12 @@
   (filter? [_] true))
 
 (extend-protocol IPredMacro
-  ;; Predicate macro templates really should just extend this protocol
-  ;; directly. getCompiledPredMacro calls into build-predmacro below
-  ;; and returns a reified instance of IPredMacro.
-  PredicateMacroTemplate
-  (expand [p input output]
-    (expand (.getCompiledPredMacro p) input output))
 
   clojure.lang.Var
   (expand [v input output]
     (if (predmacro? v)
       (expand @v input output)
-      (u/throw-runtime)))
-
-  ;; TODO: jCascalog shold just use these interfaces directly. If this
-  ;; were the case, we wouldn't have to extend the protocol here.
-  PredicateMacro
-  (expand [p input output]
-    (letfn [(to-fields [fields]
-              (jcascalog.Fields. (or fields [])))]
-      (-> p (.getPredicates (to-fields input)
-                            (to-fields output))))))
+      (u/throw-runtime))))
 
 ;; kind of a hack, simulate using pred macros like filters
 

@@ -17,13 +17,6 @@
       (.addAppender (WriterAppender. (SimpleLayout.) *out*)))
   (System/setOut (PrintStream. (WriterOutputStream. *out*))))
 
-(defn bootstrap-jcascalog []
-  (import '[com.twitter.maple.tap StdoutTap]
-          '[jcascalog Api Fields Predicate PredicateMacro Subquery
-            Api$FirstNArgs Option]
-          '[jcascalog.op Sum Count Div Plus Minus Multiply Avg
-            Max Min Limit LimitRank ReParse DistinctCount]))
-
 (def person
   [
    ;; [person]

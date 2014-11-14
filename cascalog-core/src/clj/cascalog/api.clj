@@ -23,8 +23,7 @@
   (:import [cascading.flow Flow]
            [cascading.tap Tap]
            [cascalog.logic.parse TailStruct]
-           [cascalog.cascading.tap CascalogTap]
-           [jcascalog Subquery]))
+           [cascalog.cascading.tap CascalogTap]))
 
 ;; Functions for creating taps and tap helpers
 
@@ -59,10 +58,6 @@
   (get-out-fields [tail]
     (:available-fields tail))
 
-  Subquery
-  (get-out-fields [sq]
-    (get-out-fields (.getCompiledSubquery sq)))
-
   CascalogTap
   (get-out-fields [tap]
     (get-out-fields (:source tap))))
@@ -74,9 +69,6 @@
 ;; define output fields, rather than just throwing immediately.
 
 (extend-protocol INumOutFields
-  Subquery
-  (num-out-fields [sq]
-    (count (seq (.getOutputFields sq))))
 
   CascalogTap
   (num-out-fields [tap]
@@ -130,18 +122,6 @@
   ([^String outfile sink-tap query]
      (let [^Flow flow (compile-flow sink-tap query)]
        (flow/graph flow outfile))))
-
-(defmacro expand-query [outvars & predicates]
-  "Printes Expanded operations and predicates
-
-  Syntax: (expand-query outvars & predicates)
-
-  Ex: (expand-query [?person] (age ?person 25))"
-  `(v/with-logic-vars
-     (let [{outvars# :output-fields
-            predicates# :predicates}
-           (parse/prepare-subquery ~outvars [~@(map vec predicates)])]
-       (print (parse/build-query outvars# predicates#)))))
 
 (defn normalize-sink-connection [sink subquery]
   (cond (fn? sink) (sink subquery)
@@ -249,10 +229,6 @@
   TailStruct
   (select-fields [sq fields]
     (parse/project sq fields))
-
-  Subquery
-  (select-fields [sq fields]
-    (select-fields (.getCompiledSubquery sq) fields))
 
   Tap
   (select-fields [tap fields]

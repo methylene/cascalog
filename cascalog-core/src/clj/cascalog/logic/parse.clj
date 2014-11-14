@@ -683,8 +683,8 @@ This won't work in distributed mode because of the ->Record functions."
 ;; output fields and options.
 
 (defn build-query
-  [output-fields raw-predicates]
-  (let [[options predicates] (opts/extract-options raw-predicates)
+  [{:keys [output-fields predicates]}]
+  (let [[options predicates] (opts/extract-options predicates)
         expanded (mapcat expand-outvars predicates)]
     (validate-predicates! expanded options)
     (p/RawSubquery. output-fields expanded options)))
@@ -699,20 +699,19 @@ This won't work in distributed mode because of the ->Record functions."
   "Parses predicates and output fields and returns a proper subquery."
   [output-fields raw-predicates]
   (let [{output-fields :output-fields
-         raw-predicates :predicates}
+         predicates :predicates :as m}
         (prepare-subquery output-fields raw-predicates)]
     (if (query-signature? output-fields)
       (build-rule
-       (build-query output-fields raw-predicates))
+       (build-query m))
       (let [parsed (parse-variables output-fields :<)]
         (pm/build-predmacro (:input parsed)
                             (:output parsed)
-                            raw-predicates)))))
+                            predicates)))))
 
 (defmacro <-
   "Constructs a query or predicate macro from a list of
-  predicates. Predicate macros support destructuring of the input and
-  output variables."
+  predicates. Predicate macros are not supported yet."
   [outvars & predicates]
   `(v/with-logic-vars
      (parse-subquery ~outvars [~@(map vec predicates)])))

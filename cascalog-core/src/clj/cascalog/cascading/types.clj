@@ -7,8 +7,7 @@
            [cascading.pipe Pipe Merge]
            [cascading.tap Tap]
            [cascading.tuple Fields Tuple]
-           [com.twitter.maple.tap MemorySourceTap]
-           [jcascalog Subquery]))
+           [com.twitter.maple.tap MemorySourceTap]))
 
 ;; ## Tuple Conversion
 ;;
@@ -54,9 +53,6 @@
   (generator [x] x))
 
 (extend-protocol IGenerator
-  Subquery
-  (generator [sq]
-    (generator (.getCompiledSubquery sq)))
 
   CascalogTap
   (generator [tap] (generator (:source tap)))
