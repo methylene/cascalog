@@ -10,6 +10,11 @@
             ParallelBuffer Prepared]
            [cascalog CascalogFunction CascalogBuffer CascalogAggregator ParallelAgg]))
 
+(defprotocol IToMap (to-map [_]))
+
+(extend-protocol IToMap
+  IPersistentMap (to-map [m] m))
+
 (defprotocol IOperation
   (to-operation [_]
     "Returns a sequence of RawPredicate instances."))
@@ -26,7 +31,9 @@
 
 (defrecord RawPredicate [op input output]
   IRawPredicate
-  (normalize [p] [p]))
+  (normalize [p] [p])
+  IToMap
+  (to-map [m] (into {} (assoc m :type :raw-predicate))))
 
 (extend-protocol IRawPredicate
   IPersistentMap
@@ -35,7 +42,11 @@
 ;; Output of the subquery, the predicates it contains and the options
 ;; in the subquery.
 
-(defrecord RawSubquery [fields predicates options])
+(defrecord RawSubquery [fields predicates options]
+  IToMap
+  (to-map [m] (into {}
+                    (-> (assoc m :type :raw-subquery)
+                        (update-in [:predicates] #(map to-map %))))))
 
 ;; Printing Methods
 ;;

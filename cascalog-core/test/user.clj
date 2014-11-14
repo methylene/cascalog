@@ -31,3 +31,5 @@
   "Run form, print result to stdout. Example:
    (test-run (<- [?x] ([[1]] ?x)))"
   [form] `(?- (stdout) ~form))
+
+;; (p/to-map (<-*** [?x] ([[1]] ?x)))
