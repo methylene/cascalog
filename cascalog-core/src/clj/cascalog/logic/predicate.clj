@@ -5,7 +5,7 @@
             [cascalog.logic.def :as d]
             [cascalog.logic.fn :refer (search-for-var)]
             [cascalog.logic.platform :as p])
-  (:import [clojure.lang IFn]
+  (:import [clojure.lang IFn IPersistentMap]
            [cascalog.logic.def ParallelAggregator
             ParallelBuffer Prepared]
            [cascalog CascalogFunction CascalogBuffer CascalogAggregator ParallelAgg]))
@@ -27,6 +27,10 @@
 (defrecord RawPredicate [op input output]
   IRawPredicate
   (normalize [p] [p]))
+
+(extend-protocol IRawPredicate
+  IPersistentMap
+  (normalize [m] [m]))
 
 ;; Output of the subquery, the predicates it contains and the options
 ;; in the subquery.

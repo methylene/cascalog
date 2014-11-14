@@ -707,6 +707,16 @@ This won't work in distributed mode because of the ->Record functions."
                             (:output parsed)
                             predicates)))))
 
+(defn parse-subquery***
+  [output-fields raw-predicates]
+  (assert (query-signature? output-fields))
+  (build-query (prepare-subquery output-fields raw-predicates)))
+
+(defmacro <-***
+  [outvars & predicates]
+  `(v/with-logic-vars
+     (parse-subquery*** ~outvars [~@(map vec predicates)])))
+
 (defmacro <-
   "Constructs a query or predicate macro from a list of
   predicates. Predicate macros are not supported yet."
