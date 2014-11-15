@@ -35,6 +35,9 @@
   IToMap
   (to-map [m] (into {} (assoc m :type :raw-predicate))))
 
+(defn raw-predicate*** [op input output]
+  {:op op :input input :output output :type :raw-predicate})
+
 (extend-protocol IRawPredicate
   IPersistentMap
   (normalize [m] [m]))

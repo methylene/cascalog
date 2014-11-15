@@ -98,6 +98,16 @@
         (mapcat p/normalize (pm/expand op input output))
         [(p/RawPredicate. op (not-empty input) (not-empty output))]))))
 
+
+(defn normalize*** [x]
+  (if (instance? IPersistentVector x)
+    (let [[op & rest] x
+          {:keys [input output]} (parse-variables rest (default-selector op))]
+      (if (pm/predmacro? op)
+        (mapcat normalize*** (pm/expand op input output))
+        [(p/to-map (p/raw-predicate*** op (not-empty input) (not-empty output)))]))
+    [x]))
+
 ;; ## Unground Var Validation
 
 (defn unground-outvars
@@ -657,7 +667,9 @@ This won't work in distributed mode because of the ->Record functions."
                                       (rename output)
                                       (assoc :operations operations)))
                                 nodes))
+;;        _ (println "tails:" tails)
         joined     (merge-tails tails options)
+;;        _ (println "joined:" joined)
         grouping-fields (filter
                          (set (:available-fields joined))
                          fields)
@@ -693,6 +705,12 @@ This won't work in distributed mode because of the ->Record functions."
     {:output-fields output-fields
      :predicates raw-predicates}))
 
+(defn prepare-subquery*** [output-fields raw-predicates]
+  (let [output-fields (v/sanitize output-fields)
+        raw-predicates (mapcat normalize*** raw-predicates)]
+    {:output-fields output-fields
+     :predicates raw-predicates}))
+
 (defn parse-subquery
   "Parses predicates and output fields and returns a proper subquery."
   [output-fields raw-predicates]
@@ -707,15 +725,15 @@ This won't work in distributed mode because of the ->Record functions."
                             (:output parsed)
                             predicates)))))
 
-(defn parse-subquery***
+(defn read-subquery***
   [output-fields raw-predicates]
   (assert (query-signature? output-fields))
-  (build-query (prepare-subquery output-fields raw-predicates)))
+  (p/to-map (prepare-subquery*** output-fields raw-predicates)))
 
 (defmacro <-***
   [outvars & predicates]
   `(v/with-logic-vars
-     (parse-subquery*** ~outvars [~@(map vec predicates)])))
+     (read-subquery*** ~outvars [~@(map vec predicates)])))
 
 (defmacro <-
   "Constructs a query or predicate macro from a list of

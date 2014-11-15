@@ -1,4 +1,5 @@
 (ns user
+  (:refer-clojure :exclude [read-string])
   (:require [clojure.set :refer (difference intersection union subset?)]
             [clojure.zip :as czip]
             [jackknife.core :as u]
@@ -22,14 +23,25 @@
            [java.io File PrintStream]
            [cascalog WriterOutputStream]))
 
+(defn ppprint [x] (print \space) (pprint x))
+
 (defn init-logging []
   (System/setOut (PrintStream. (WriterOutputStream. *out*)))
-  (println "Logging inited. Try")
-  (println \space '(test-run (<- [?x] ([[1]] ?x)))))
+  (println "Logging inited. Try:")
+  (ppprint '(test-run (<- [?x] ([[1]] ?x))))
+  (ppprint '(<-***  [?x ?y ?z]
+                    ([[1 2 3]] ?x)
+                    (* ?x ?x :> ?y)
+                    ( * ?x ?y :> ?z))))
 
 (defmacro test-run
-  "Run form, print result to stdout. Example:
-   (test-run (<- [?x] ([[1]] ?x)))"
+  "Run form, print result to stdout. Examples:
+   (test-run (<- [?x] ([[1]] ?x)))
+   (<-***  [?x ?y ?z]
+           ([[1 2 3]] ?x)
+           (* ?x ?x :> ?y)
+           ( * ?x ?y :> ?z))"
   [form] `(?- (stdout) ~form))
 
 ;; (p/to-map (<-*** [?x] ([[1]] ?x)))
+
