@@ -93,20 +93,12 @@
 (extend-protocol p/IRawPredicate
   IPersistentVector
   (normalize [[op & rest]]
-    (let [{:keys [input output]} (parse-variables rest (default-selector op))]
+    (let [op (p/to-operation op)
+          default (default-selector op)
+          {:keys [input output]} (parse-variables rest (default-selector op))]
       (if (pm/predmacro? op)
         (mapcat p/normalize (pm/expand op input output))
         [(p/RawPredicate. op (not-empty input) (not-empty output))]))))
-
-
-(defn normalize*** [x]
-  (if (instance? IPersistentVector x)
-    (let [[op & rest] x
-          {:keys [input output]} (parse-variables rest (default-selector op))]
-      (if (pm/predmacro? op)
-        (mapcat normalize*** (pm/expand op input output))
-        [(p/to-map (p/raw-predicate*** op (not-empty input) (not-empty output)))]))
-    [x]))
 
 ;; ## Unground Var Validation
 
@@ -667,9 +659,7 @@ This won't work in distributed mode because of the ->Record functions."
                                       (rename output)
                                       (assoc :operations operations)))
                                 nodes))
-;;        _ (println "tails:" tails)
         joined     (merge-tails tails options)
-;;        _ (println "joined:" joined)
         grouping-fields (filter
                          (set (:available-fields joined))
                          fields)
@@ -693,8 +683,8 @@ This won't work in distributed mode because of the ->Record functions."
 ;; output fields and options.
 
 (defn build-query
-  [{:keys [output-fields predicates]}]
-  (let [[options predicates] (opts/extract-options predicates)
+  [output-fields raw-predicates]
+  (let [[options predicates] (opts/extract-options raw-predicates)
         expanded (mapcat expand-outvars predicates)]
     (validate-predicates! expanded options)
     (p/RawSubquery. output-fields expanded options)))
@@ -705,39 +695,24 @@ This won't work in distributed mode because of the ->Record functions."
     {:output-fields output-fields
      :predicates raw-predicates}))
 
-(defn prepare-subquery*** [output-fields raw-predicates]
-  (let [output-fields (v/sanitize output-fields)
-        raw-predicates (mapcat normalize*** raw-predicates)]
-    {:output-fields output-fields
-     :predicates raw-predicates}))
-
 (defn parse-subquery
   "Parses predicates and output fields and returns a proper subquery."
   [output-fields raw-predicates]
   (let [{output-fields :output-fields
-         predicates :predicates :as m}
+         raw-predicates :predicates}
         (prepare-subquery output-fields raw-predicates)]
     (if (query-signature? output-fields)
       (build-rule
-       (build-query m))
+       (build-query output-fields raw-predicates))
       (let [parsed (parse-variables output-fields :<)]
         (pm/build-predmacro (:input parsed)
                             (:output parsed)
-                            predicates)))))
-
-(defn read-subquery***
-  [output-fields raw-predicates]
-  (assert (query-signature? output-fields))
-  (p/to-map (prepare-subquery*** output-fields raw-predicates)))
-
-(defmacro <-***
-  [outvars & predicates]
-  `(v/with-logic-vars
-     (read-subquery*** ~outvars [~@(map vec predicates)])))
+                            raw-predicates)))))
 
 (defmacro <-
   "Constructs a query or predicate macro from a list of
-  predicates. Predicate macros are not supported yet."
+  predicates. Predicate macros support destructuring of the input and
+  output variables."
   [outvars & predicates]
   `(v/with-logic-vars
      (parse-subquery ~outvars [~@(map vec predicates)])))

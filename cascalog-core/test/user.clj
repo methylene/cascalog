@@ -13,9 +13,10 @@
             [cascalog.logic.platform :as platform]
             [cascalog.logic.options :as opts]
             [cascalog.logic.parse :refer :all]
-            [cascalog.api :refer [stdout ?-]]
+            [cascalog.logic.parse-smb :as pb]
+            [cascalog.api :refer [stdout ?- ??<- cross-join]]
             [clojure.pprint :refer [pprint]]
-            [cascalog.playground :refer [bootstrap-emacs]])
+            [clojure.stacktrace :refer [print-cause-trace]])
   (:import [cascalog.logic.predicate
             Operation FilterOperation Aggregator Generator
             GeneratorSet RawPredicate RawSubquery]
@@ -24,12 +25,13 @@
            [cascalog WriterOutputStream]))
 
 (defn ppprint [x] (print \space) (pprint x))
+(defn pct [] (print-cause-trace *e))
 
 (defn init-logging []
   (System/setOut (PrintStream. (WriterOutputStream. *out*)))
   (println "Logging inited. Try:")
   (ppprint '(test-run (<- [?x] ([[1]] ?x))))
-  (ppprint '(<-***  [?x ?y ?z]
+  (ppprint '(pb/<-  [?x ?y ?z]
                     ([[1 2 3]] ?x)
                     (* ?x ?x :> ?y)
                     ( * ?x ?y :> ?z))))
@@ -43,5 +45,4 @@
            ( * ?x ?y :> ?z))"
   [form] `(?- (stdout) ~form))
 
-;; (p/to-map (<-*** [?x] ([[1]] ?x)))
 

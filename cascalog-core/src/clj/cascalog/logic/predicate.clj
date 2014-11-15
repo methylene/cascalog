@@ -36,7 +36,7 @@
   (to-map [m] (into {} (assoc m :type :raw-predicate))))
 
 (defn raw-predicate*** [op input output]
-  {:op op :input input :output output :type :raw-predicate})
+  {:op op :input (vec input) :output (vec output) :type :raw-predicate})
 
 (extend-protocol IRawPredicate
   IPersistentMap
