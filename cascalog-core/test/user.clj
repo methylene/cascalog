@@ -24,25 +24,31 @@
            [java.io File PrintStream]
            [cascalog WriterOutputStream]))
 
-(defn ppprint [x] (print \space) (pprint x))
 (defn pct [] (print-cause-trace *e))
 
-(defn init-logging []
-  (System/setOut (PrintStream. (WriterOutputStream. *out*)))
-  (println "Logging inited. Try:")
-  (ppprint '(test-run (<- [?x] ([[1]] ?x))))
-  (ppprint '(pb/<-  [?x ?y ?z]
-                    ([[1 2 3]] ?x)
-                    (* ?x ?x :> ?y)
-                    ( * ?x ?y :> ?z))))
+(comment
 
-(defmacro test-run
-  "Run form, print result to stdout. Examples:
-   (test-run (<- [?x] ([[1]] ?x)))
-   (<-***  [?x ?y ?z]
-           ([[1 2 3]] ?x)
-           (* ?x ?x :> ?y)
-           ( * ?x ?y :> ?z))"
-  [form] `(?- (stdout) ~form))
+  (*<-* [?x ?y ?z]
+        ([[1] [2] [3]] :>> [?x])
+        (* :<< [?x ?x] :>> [?y])
+        (* :<< [?x ?y] :>> [?z]))
+
+  (*<-* [?c ?y]
+        ('[[a 1] [b 1] [a 1]] :>> [?c ?x])
+        (+ :<< [?x] :>> [?y]))
+
+  (macroexpand
+   '(pb/parse-subquery [?x ?y ?z]
+                       ([[1] [2] [3]] :>> [?x])
+                       (* :<< [?x ?x] :>> [?y])
+                       (* :<< [?x ?y] :>> [?z])))
+
+  (macroexpand
+   '(pb/parse-subquery [?c ?y]
+                       ('[[a 1] [b 1] [a 1]] :>> [?c ?x])
+                       (+ :<< [?x] :>> [?y])))
+
+  
+)
 
 
